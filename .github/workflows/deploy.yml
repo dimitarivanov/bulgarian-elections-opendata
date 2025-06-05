@@ -1,0 +1,141 @@
+name: Build and Deploy
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r converter/requirements.txt
+
+      - name: Convert data to JSON
+        run: python converter/json-converter.py ./gh-pages/api
+
+      - name: Set commit hash
+        id: commit
+        run: |
+          COMMIT_HASH=$(git rev-parse HEAD)
+          echo "commit=${COMMIT_HASH}" >> "$GITHUB_OUTPUT"
+
+      - name: Copy index.html to gh-pages directory
+        run: cp ui/index.html ./gh-pages/
+
+      - name: Update release version in index.html
+        run: |
+          version="${{ github.ref_name }}"
+          sed -i "s|<!-- VERSION_PLACEHOLDER -->|release: <b>$version</b>|g" ./gh-pages/index.html
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./gh-pages
+
+      - name: Create directories for ZIP files
+        run: |
+          mkdir -p dist
+
+      - name: Create ZIP archive for CSV
+        run: |
+          cd data
+          zip -r ../dist/bulgarian-elections-csv.zip ./*
+
+      - name: Create ZIP archive for JSON
+        run: |
+          cd ./gh-pages/api
+          zip -r ../../dist/bulgarian-elections-json.zip ./*
+          cd ../../data
+          zip -ur ../dist/bulgarian-elections-json.zip ./LICENSE
+
+      - name: Get changelog since last versioned release
+        id: changelog
+        run: |
+          # Find latest tag that matches v-*
+          LAST_TAG=$(git tag --list 'v*.*.*' --sort=-creatordate | head -n 1)
+          if [ -z "$LAST_TAG" ]; then
+            echo "No previous version tag found. Using all history."
+            GIT_RANGE=""
+          else
+            echo "Last version tag: $LAST_TAG"
+            GIT_RANGE="$LAST_TAG..HEAD"
+          fi
+          
+          LOG=$(git log $GIT_RANGE --pretty=format:"- %s (%h by %an)" --no-merges)
+          
+          # Provide fallback if no commits
+          if [ -z "$LOG" ]; then
+            LOG="No new commits since last release."
+          fi
+
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "$LOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create timestamped release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "${{ github.ref_name }} - Bulgarian Elections OpenData"
+          body: |
+            ## Commit: `${{ steps.commit.outputs.commit }}`
+
+            ### Changelog:
+            ${{ steps.changelog.outputs.body }}
+          files: |
+            dist/bulgarian-elections-csv.zip
+            dist/bulgarian-elections-json.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update latest release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: "latest - Bulgarian Elections OpenData"
+          body: |
+            This is the latest release from commit `${{ steps.commit.outputs.commit }}`.
+
+            See full version: `${{ github.ref_name }}`
+
+            ### Changelog:
+            ${{ steps.changelog.outputs.body }}
+          files: |
+            dist/bulgarian-elections-csv.zip
+            dist/bulgarian-elections-json.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

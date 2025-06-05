@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulgarian Elections OpenData API</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #1a73e8;
+        }
+
+        .container {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .endpoint {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border-left: 4px solid #1a73e8;
+        }
+
+        .endpoint h3 {
+            margin-top: 0;
+        }
+
+        code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        a {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .elections-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .election-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+
+        .version {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: -10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Bulgarian Elections OpenData API</h1>
+        <p class="version"><!-- VERSION_PLACEHOLDER --></p>
+
+        <p>This API provides JSON-formatted election data at different geographical levels, from individual voting
+            sections up to country-wide totals.</p>
+
+        <h2>Available Elections</h2>
+        <div class="elections-list">
+            <div class="election-card">
+                <h3>2021</h3>
+                <ul>
+                    <li><a href="api/20210404/total/">April 4, 2021</a></li>
+                    <li><a href="api/20210711/total/">July 11, 2021</a></li>
+                    <li><a href="api/20211114/total/">November 14, 2021</a></li>
+                </ul>
+            </div>
+            <div class="election-card">
+                <h3>2022</h3>
+                <ul>
+                    <li><a href="api/20221002/total/">October 2, 2022</a></li>
+                </ul>
+            </div>
+            <div class="election-card">
+                <h3>2023</h3>
+                <ul>
+                    <li><a href="api/20230402/total/">April 2, 2023</a></li>
+                </ul>
+            </div>
+            <div class="election-card">
+                <h3>2024</h3>
+                <ul>
+                    <li><a href="api/20240609/total/">June 9, 2024</a></li>
+                    <li><a href="api/20241027/total/">October 27, 2024</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>API Structure</h2>
+        <p>Each election date and the combined data provide access to four hierarchical levels:</p>
+
+        <div class="endpoint">
+            <h3>Country Level</h3>
+            <p>Access country-wide aggregated data:</p>
+            <code>/api/{election_date}/total/</code><br>
+            <code>/api/combined/total/</code>
+        </div>
+
+        <div class="endpoint">
+            <h3>Regional Election Commission (RIK) Level</h3>
+            <p>Access RIK level data (two-digit code):</p>
+            <code>/api/{election_date}/riks/{code}/</code><br>
+            <code>/api/combined/riks/{code}/</code>
+        </div>
+
+        <div class="endpoint">
+            <h3>Municipality Level</h3>
+            <p>Access municipality level data (four-digit code):</p>
+            <code>/api/{election_date}/municipalities/{code}/</code><br>
+            <code>/api/combined/municipalities/{code}/</code>
+        </div>
+
+        <div class="endpoint">
+            <h3>Section Level</h3>
+            <p>Access individual section data (nine-digit identifier):</p>
+            <code>/api/{election_date}/sections/{id}/</code><br>
+            <code>/api/combined/sections/{id}/</code>
+        </div>
+
+        <h2>Common Reference Data</h2>
+        <p>Static reference data is available at:</p>
+        <ul>
+            <li><a href="api/common/elections/">Elections metadata</a></li>
+            <li><a href="api/common/municipalities/">Municipality reference data</a></li>
+            <li><a href="api/common/participants/">Party and coalition information</a></li>
+            <li><a href="api/common/riks/">Regional election commission details</a></li>
+        </ul>
+
+        <h2>Custom Analytics</h2>
+        <p>Specialized analytical views:</p>
+        <ul>
+            <li><a href="api/custom/sections_total_votes/">Statistical analysis of voting patterns</a></li>
+        </ul>
+
+        <h2>JSON Response Structure</h2>
+        <p>All hierarchical levels (total, RIK, municipality, section) share the same JSON structure:</p>
+        <pre style="background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto;">
+{
+    "id": "Identifier (varies by level)",
+    "e": "Election date (YYYYMMDD)",
+    "prv": "Pre-registered voters",
+    "rv": "Registered voters",
+    "olv": "On-site listed voters",
+    "v": "Total voters who voted",
+    "db": "Distributed ballots",
+    "uupb": "Unused paper ballots",
+    "dpb": "Destroyed paper ballots",
+    "ub": "Used ballots",
+    "upb": "Used paper ballots",
+    "umb": "Used machine ballots",
+    "ipb": "Invalid paper ballots",
+    "vv": "Valid votes",
+    "vvp": "Valid votes for parties",
+    "vvsn": "Valid votes for 'support none'",
+    "vd": [
+        {
+            "id": "Party/candidate registration code",
+            "n": "Party/candidate name",
+            "p": "Paper votes",
+            "m": "Machine votes",
+            "md": "Machine data votes",
+            "t": "Total votes"
+        }
+    ]
+}
+        </pre>
+
+        <h3>Combined Data Structure</h3>
+        <p>For the combined endpoints (<code>/api/combined/</code>), the structure is modified to accommodate multiple
+            elections:</p>
+        <pre style="background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto;">
+{
+    "id": "Identifier (varies by level)",
+    "prv": [
+        {
+            "e": "Election date (YYYYMMDD)",
+            "v": "Number of pre-registered voters"
+        }
+    ],
+    "rv": [
+        {
+            "e": "Election date (YYYYMMDD)",
+            "v": "Number of registered voters"
+        }
+    ],
+    "vd": [
+        {
+            "id": "Party/candidate registration code",
+            "n": "Party/candidate name",
+            "p": [
+                {
+                    "e": "Election date (YYYYMMDD)",
+                    "v": "Number of paper votes"
+                }
+            ],
+            "m": [
+                {
+                    "e": "Election date (YYYYMMDD)",
+                    "v": "Number of machine votes"
+                }
+            ],
+            "t": [
+                {
+                    "e": "Election date (YYYYMMDD)",
+                    "v": "Total number of votes"
+                }
+            ]
+        }
+    ]
+}
+        </pre>
+        <p>Note: All numeric fields in the combined data structure are wrapped in arrays of objects with election date
+            (<code>e</code>) and value (<code>v</code>).</p>
+
+        <h2>License</h2>
+        <p>This API data is licensed under the <a href="https://creativecommons.org/licenses/by-sa/4.0/">Creative
+                Commons Attribution-ShareAlike 4.0 International License (CC BY-SA 4.0)</a>.</p>
+    </div>
+</body>
+
+</html>
