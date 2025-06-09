@@ -1,6 +1,6 @@
-# Contributing to Bulgarian Elections Open Data
+# Contributing to Bulgarian Elections OpenData
 
-First off, thank you for considering contributing to Bulgarian Elections Open Data! It's people like you that help make this data more accessible and useful for everyone.
+First off, thank you for considering contributing to Bulgarian Elections OpenData! It's people like you that help make this data more accessible and useful for everyone.
 
 ## Code of Conduct
 
@@ -49,7 +49,7 @@ If you find yourself wishing for a feature that doesn't exist, you are probably 
 
 ## License
 
-By contributing to Bulgarian Elections Open Data, you agree that your contributions will be licensed under its MIT License. See the [LICENSE](LICENSE) file for details.
+By contributing to Bulgarian Elections OpenData, you agree that your contributions will be licensed under its MIT License. See the [LICENSE](LICENSE) file for details.
 
 ## Development Process
 
